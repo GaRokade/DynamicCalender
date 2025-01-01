@@ -1,46 +1,38 @@
 import React, { useState } from "react";
 
-const Calendar = ({ events, onDayClick, formatDate }) => {
+const Calendar = ({ events, onDayClick, formatDate, onEventEdit, currentMonth, currentYear, exportToCSV, exportToJSON }) => {
   const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
-  const [selectedDate, setSelectedDate] = useState(null); // State to track selected date
+  const [selectedDate, setSelectedDate] = useState(null);
 
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    "January", "February", "March", "April", "May", "June", "July", "August",
+    "September", "October", "November", "December"
   ];
 
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear((prev) => prev - 1);
+      onMonthChange(11, currentYear - 1); // Move to previous year
     } else {
-      setCurrentMonth((prev) => prev - 1);
+      onMonthChange(currentMonth - 1, currentYear);
     }
   };
 
   const handleNextMonth = () => {
     if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear((prev) => prev + 1);
+      onMonthChange(0, currentYear + 1); // Move to next year
     } else {
-      setCurrentMonth((prev) => prev + 1);
+      onMonthChange(currentMonth + 1, currentYear);
     }
+  };
+
+  const onMonthChange = (newMonth, newYear) => {
+    // Update month and year in the parent component (via props or state update)
+    // Use a function from parent to update `currentMonth` and `currentYear`
+    // Example: pass this function as a prop from App.js to update month/year
   };
 
   const isToday = (day) => {
@@ -60,24 +52,43 @@ const Calendar = ({ events, onDayClick, formatDate }) => {
     );
   };
 
+  // Helper function to determine event class based on category
+  const getEventClass = (category) => {
+    switch (category) {
+      case "work":
+        return "event-work";
+      case "personal":
+        return "event-personal";
+      case "others":
+        return "event-others";
+      default:
+        return "";
+    }
+  };
+
   const handleDayClick = (day) => {
     const date = new Date(currentYear, currentMonth, day);
-    setSelectedDate(date); // Update selected date
-    onDayClick(date); // Pass selected date to parent
+    setSelectedDate(date);
+    onDayClick(date);
   };
 
   const getDayEvents = (day) => {
     const date = new Date(currentYear, currentMonth, day);
-    return events.filter((event) => formatDate(event.date) === formatDate(date));
+    return events.filter(event => formatDate(event.date) === formatDate(date));
   };
-
+  const renderEventTime = (event) => {
+    return (
+      <div>
+        <p>Start: {event.startTime}</p>
+        <p>End: {event.endTime}</p>
+      </div>
+    );
+  };
   return (
     <div className="calendar-container">
       <div className="calendar-header">
         <button onClick={handlePrevMonth}>Previous</button>
-        <h2>
-          {monthNames[currentMonth]} {currentYear}
-        </h2>
+        <h2>{monthNames[currentMonth]} {currentYear}</h2>
         <button onClick={handleNextMonth}>Next</button>
       </div>
       <div className="calendar-grid">
@@ -87,15 +98,24 @@ const Calendar = ({ events, onDayClick, formatDate }) => {
         {days.map((day) => (
           <div
             key={day}
-            className={`calendar-day ${
-              isToday(day) ? "current" : ""
-            } ${isSelected(day) ? "selected" : ""}`}
+            className={`calendar-day ${isToday(day) ? "current" : ""} ${isSelected(day) ? "selected" : ""}`}
             onClick={() => handleDayClick(day)}
           >
             {day}
-            {getDayEvents(day).length > 0 && <span className="event-dot" />}
+            {getDayEvents(day).map((event) => (
+              <div
+                key={event.id}
+                className={`event-dot ${getEventClass(event.category)}`}
+                onClick={() => onEventEdit(event)}
+              />
+            ))}
           </div>
+          
         ))}
+      </div>
+      <div>
+        <button onClick={exportToJSON}>Export as JSON</button>
+        <button onClick={exportToCSV}>Export as CSV</button>
       </div>
     </div>
   );

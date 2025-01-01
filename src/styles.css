@@ -365,4 +365,46 @@ nav {
     color: #777;
     font-style: italic;
   }
+  /* styles.css */
+.event-work {
+    background-color: #2a0946; /* Light red for work */
+  }
   
+  .event-personal {
+    background-color: #d51c7e; /* Light green for personal */
+  }
+  
+  .event-others {
+    background-color: #0f57a4; /* Light blue for others */
+  }.event-dot {
+    width: 12px;      /* Increase the width */
+    height: 12px;     /* Increase the height */
+   
+    border-radius: 50%; /* To make it round */
+    display: inline-block;
+    margin: 2px 0;    /* Adjust position if needed */
+  }
+  
+  button {
+    margin: 10px;
+    padding: 10px;
+    font-size: 14px;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #45a049;
+  }
+  .event-details {
+    font-size: 0.9em;
+    color: gray;
+  }
+  
+  .event-details p {
+    margin: 5px 0;
+  }
+    

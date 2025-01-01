@@ -1,18 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const EventModal = ({ selectedDate, events, onSave, onClose }) => {
+const EventModal = ({ selectedDate, events, onSave, onClose, eventToEdit }) => {
   const [eventName, setEventName] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("others"); // Default category
+
+  useEffect(() => {
+    if (eventToEdit) {
+      setEventName(eventToEdit.name);
+      setDescription(eventToEdit.description || "");
+      setCategory(eventToEdit.category || "others"); // Use the category from eventToEdit
+    }
+  }, [eventToEdit]);
 
   const handleSave = () => {
     if (eventName) {
-      onSave({
-        name: eventName,
-        description,
-        date: selectedDate,
-      });
+      if (eventToEdit) {
+        // Update existing event
+        onSave({
+          ...eventToEdit,
+          name: eventName,
+          description,
+          category, // Include the category
+        });
+      } else {
+        // Create new event
+        onSave({
+          name: eventName,
+          description,
+          category,
+          date: selectedDate,
+        });
+      }
       setEventName("");
       setDescription("");
+      setCategory("others"); // Reset category to default
       onClose();
     } else {
       alert("Event name is required.");
@@ -22,18 +44,8 @@ const EventModal = ({ selectedDate, events, onSave, onClose }) => {
   const formatFullDate = (date) => {
     const d = new Date(date);
     const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      "January", "February", "March", "April", "May", "June", "July", "August",
+      "September", "October", "November", "December"
     ];
     return `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
   };
@@ -41,8 +53,8 @@ const EventModal = ({ selectedDate, events, onSave, onClose }) => {
   return (
     <div className="modal">
       <div className="modal-header">
-        <h2>Add Event for {formatFullDate(selectedDate)}</h2>
-        <button className="close-button" onClick={onClose}>
+        <h2>{eventToEdit ? `Edit Event for ${formatFullDate(selectedDate)}` : `Add Event for ${formatFullDate(selectedDate)}`}</h2>
+        <button className="modal-close" onClick={onClose}>
           &times;
         </button>
       </div>
@@ -58,10 +70,18 @@ const EventModal = ({ selectedDate, events, onSave, onClose }) => {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)} // Handle category change
+        >
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+          <option value="others">Others</option>
+        </select>
       </div>
       <div className="modal-actions">
         <button className="save-btn" onClick={handleSave}>
-          Save
+          {eventToEdit ? "Update" : "Save"}
         </button>
         <button className="cancel-btn" onClick={onClose}>
           Cancel

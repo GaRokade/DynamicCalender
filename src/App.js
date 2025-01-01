@@ -1,36 +1,99 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { BrowserRouter as Router, Route, Link, Routes } from "react-router-dom";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import Calendar from "./components/Calendar";
 import EventModal from "./components/EventModal";
 import EventList from "./components/EventList";
+import PropTypes from "prop-types";
 import "./styles.css";
 
 const App = () => {
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [events, setEvents] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const exportToJSON = () => {
+    const eventsForMonth = events.filter((event) => {
+      const eventMonth = event.date.getMonth(); // Get month from event date
+      const eventYear = event.date.getFullYear(); // Get year from event date
+      return eventMonth === currentMonth && eventYear === currentYear; // Filter by current month and year
+    });
 
+    // Convert to JSON format
+    const json = JSON.stringify(eventsForMonth, null, 2); // Pretty-print JSON
+    const blob = new Blob([json], { type: "application/json" }); // Create Blob
+    const url = URL.createObjectURL(blob); // Create download link
+
+    // Create a temporary download link and trigger the download
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `events-${currentMonth + 1}-${currentYear}.json`; // Download file with month-year name
+    link.click();
+  };
+  const exportToCSV = () => {
+    const eventsForMonth = events.filter((event) => {
+      const eventMonth = event.date.getMonth();
+      const eventYear = event.date.getFullYear();
+      return eventMonth === currentMonth && eventYear === currentYear;
+    });
+
+    // Prepare CSV data: header + rows
+    const header = "Name,Description,Date\n";
+    const rows = eventsForMonth
+      .map(
+        (event) =>
+          `${event.name},${event.description || ""},${event.date.toISOString()}`
+      )
+      .join("\n");
+
+    const csvContent = header + rows;
+    const blob = new Blob([csvContent], { type: "text/csv" }); // Create Blob for CSV
+    const url = URL.createObjectURL(blob);
+
+    // Create a temporary download link and trigger the download
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `events-${currentMonth + 1}-${currentYear}.csv`; // File name with month-year
+    link.click();
+  };
+  const handleMonthChange = (newMonth, newYear) => {
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
+  };
+
+  // Fetch events
   useEffect(() => {
+    setLoading(true);
     axios
       .get("http://localhost:5000/events")
       .then((response) => {
-        const eventsWithDates = response.data.map((event) => ({
+        const eventsWithDates = response.data.map((event, index) => ({
           ...event,
-          date: new Date(event.date), // Ensure the date is a valid Date object
+          date: new Date(event.date),
+          id: event.id || index, // Add fallback unique ID
         }));
         setEvents(eventsWithDates);
+        setLoading(false);
       })
       .catch((error) => {
-        console.error("Error loading events:", error);
-        alert("Failed to load events.");
+        setError("Error loading events");
+        setLoading(false);
       });
   }, []);
 
+  // Add event
   const addEvent = (newEvent) => {
     const eventWithDate = {
       ...newEvent,
-      date: new Date(newEvent.date), // Ensure date is a Date object
+      date: new Date(newEvent.date),
+      id: newEvent.id || Date.now(), // Generate unique ID
     };
+
     axios
       .post("http://localhost:5000/events", eventWithDate)
       .then(() => {
@@ -42,62 +105,87 @@ const App = () => {
       });
   };
 
-  // Format the date to be used for event matching
   const formatDate = (date) => {
     if (date instanceof Date && !isNaN(date)) {
-      return date.toISOString().split("T")[0]; // Format to YYYY-MM-DD
-    }
-    return ""; // Return empty string if invalid date
-  };
-
-  // Function to render date as a string
-  const renderDate = (date) => {
-    if (date instanceof Date && !isNaN(date)) {
-      return date.toLocaleDateString(); // Or use toISOString() or toString() for different formats
+      return date.toISOString().split("T")[0];
     }
     return "";
   };
 
-  return (
-    <Router>
-      <div>
-        <nav>
-          <Link to="/">Calendar</Link> | <Link to="/events">Saved Events</Link>
-        </nav>
+  const renderDate = (date) => {
+    if (date instanceof Date && !isNaN(date)) {
+      return date.toLocaleDateString();
+    }
+    return "";
+  };
 
-        <Routes>
-          <Route
-            exact
-            path="/"
-            element={
-              <div>
-                <Calendar
-                  events={events}
-                  onDayClick={(date) => setSelectedDate(date)}
-                  formatDate={formatDate}
-                />
-                {selectedDate && (
-                  <EventModal
-                    selectedDate={selectedDate}
-                    events={events.filter(
-                      (event) =>
-                        formatDate(event.date) === formatDate(selectedDate)
-                    )}
-                    onSave={addEvent}
-                    onClose={() => setSelectedDate(null)}
+  const handleDelete = (eventId) => {
+    setEvents((prevEvents) =>
+      prevEvents.filter((event) => event.id !== eventId)
+    );
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <Router>
+        <div>
+          <nav>
+            <Link to="/">Calendar</Link> |{" "}
+            <Link to="/events">Saved Events</Link>
+          </nav>
+
+          <Routes>
+            <Route
+              exact
+              path="/"
+              element={
+                <div>
+                  <Calendar
+                    events={events}
+                    onDayClick={(date) => setSelectedDate(date)}
+                    formatDate={formatDate}
+                    currentMonth={currentMonth}
+                    currentYear={currentYear}
+                    onMonthChange={handleMonthChange} // Pass month change handler
+                    exportToCSV={exportToCSV}
+                    exportToJSON={exportToJSON}
                   />
-                )}
-              </div>
-            }
-          />
-          <Route
-            path="/events"
-            element={<EventList events={events} renderDate={renderDate} />}
-          />
-        </Routes>
-      </div>
-    </Router>
+                  {selectedDate && (
+                    <EventModal
+                      selectedDate={selectedDate}
+                      events={events.filter(
+                        (event) =>
+                          formatDate(event.date) === formatDate(selectedDate)
+                      )}
+                      onSave={addEvent}
+                      onClose={() => setSelectedDate(null)}
+                    />
+                  )}
+                </div>
+              }
+            />
+            <Route
+              path="/events"
+              element={
+                <EventList
+                  events={events}
+                  renderDate={renderDate}
+                  onDelete={handleDelete}
+                />
+              }
+            />
+          </Routes>
+        </div>
+      </Router>
+    </DndProvider>
   );
+};
+
+App.propTypes = {
+  events: PropTypes.array.isRequired,
 };
 
 export default App;
