@@ -27,7 +27,7 @@ const EventList = ({ events, renderDate, onDelete }) => {
       ) : (
         <ul>
           {filteredEvents.map((event, index) => (
-            <li key={event.id || index}> {/* Use index as fallback */}
+            <li key={event.id || index}>
               <strong>{event.name}</strong>
               <br />
               <span>Date: {renderDate(new Date(event.date))}</span>
@@ -35,6 +35,11 @@ const EventList = ({ events, renderDate, onDelete }) => {
               <span className="description">
                 Description: {event.description || "No description"}
               </span>
+              <br />
+              <span className="time">
+                Time: {event.startTime} - {event.endTime}
+              </span>
+              <br />
               <button
                 className="delete-btn"
                 onClick={() => onDelete(event.id)} // Pass the event id to onDelete
@@ -57,6 +62,8 @@ EventList.propTypes = {
       name: PropTypes.string.isRequired,
       date: PropTypes.string.isRequired,
       description: PropTypes.string,
+      startTime: PropTypes.string.isRequired, // New prop for start time
+      endTime: PropTypes.string.isRequired,   // New prop for end time
     })
   ).isRequired,
   renderDate: PropTypes.func.isRequired,
@@ -64,5 +71,18 @@ EventList.propTypes = {
 };
 
 export default EventList;
-
-
+EventList.propTypes = {
+    events: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired, // Accept both string and number
+        name: PropTypes.string.isRequired,
+        date: PropTypes.string.isRequired,
+        description: PropTypes.string,
+        startTime: PropTypes.string.isRequired,
+        endTime: PropTypes.string.isRequired,
+      })
+    ).isRequired,
+    renderDate: PropTypes.func.isRequired,
+    onDelete: PropTypes.func.isRequired,
+  };
+  

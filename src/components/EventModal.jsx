@@ -4,12 +4,16 @@ const EventModal = ({ selectedDate, events, onSave, onClose, eventToEdit }) => {
   const [eventName, setEventName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("others"); // Default category
+  const [startTime, setStartTime] = useState(""); // New state for start time
+  const [endTime, setEndTime] = useState(""); // New state for end time
 
   useEffect(() => {
     if (eventToEdit) {
       setEventName(eventToEdit.name);
       setDescription(eventToEdit.description || "");
       setCategory(eventToEdit.category || "others"); // Use the category from eventToEdit
+      setStartTime(eventToEdit.startTime || ""); // Set start time if editing
+      setEndTime(eventToEdit.endTime || ""); // Set end time if editing
     }
   }, [eventToEdit]);
 
@@ -21,7 +25,9 @@ const EventModal = ({ selectedDate, events, onSave, onClose, eventToEdit }) => {
           ...eventToEdit,
           name: eventName,
           description,
-          category, // Include the category
+          category,
+          startTime,
+          endTime,
         });
       } else {
         // Create new event
@@ -30,11 +36,15 @@ const EventModal = ({ selectedDate, events, onSave, onClose, eventToEdit }) => {
           description,
           category,
           date: selectedDate,
+          startTime,
+          endTime,
         });
       }
       setEventName("");
       setDescription("");
       setCategory("others"); // Reset category to default
+      setStartTime(""); // Reset start time
+      setEndTime(""); // Reset end time
       onClose();
     } else {
       alert("Event name is required.");
@@ -78,6 +88,22 @@ const EventModal = ({ selectedDate, events, onSave, onClose, eventToEdit }) => {
           <option value="personal">Personal</option>
           <option value="others">Others</option>
         </select>
+
+        {/* Add input fields for Start Time and End Time */}
+        <div className="time-inputs">
+          <input
+            type="time"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)} // Handle start time change
+            placeholder="Start Time"
+          />
+          <input
+            type="time"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)} // Handle end time change
+            placeholder="End Time"
+          />
+        </div>
       </div>
       <div className="modal-actions">
         <button className="save-btn" onClick={handleSave}>
