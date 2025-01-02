@@ -9,6 +9,7 @@ import EventList from "./components/EventList";
 import PropTypes from "prop-types";
 import "./styles.css";
 
+const apiUrl = process.env.REACT_APP_API_URL;
 const App = () => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -70,7 +71,7 @@ const App = () => {
   useEffect(() => {
     setLoading(true);
     axios
-      .get("http://localhost:5000/events")
+      .get(apiUrl)
       .then((response) => {
         const eventsWithDates = response.data.map((event, index) => ({
           ...event,
@@ -95,7 +96,7 @@ const App = () => {
     };
 
     axios
-      .post("http://localhost:5000/events", eventWithDate)
+      .post(apiUrl, eventWithDate)
       .then(() => {
         setEvents((prev) => [...prev, eventWithDate]);
       })
