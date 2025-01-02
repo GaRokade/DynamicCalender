@@ -9,8 +9,6 @@ import EventList from "./components/EventList";
 import PropTypes from "prop-types";
 import "./styles.css";
 
-const apiUrl = process.env.REACT_APP_API_URL; // Ensure this is defined in your .env file
-
 const App = () => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -19,7 +17,6 @@ const App = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
   const exportToJSON = () => {
     const eventsForMonth = events.filter((event) => {
       const eventMonth = event.date.getMonth(); // Get month from event date
@@ -38,7 +35,6 @@ const App = () => {
     link.download = `events-${currentMonth + 1}-${currentYear}.json`; // Download file with month-year name
     link.click();
   };
-
   const exportToCSV = () => {
     const eventsForMonth = events.filter((event) => {
       const eventMonth = event.date.getMonth();
@@ -65,7 +61,6 @@ const App = () => {
     link.download = `events-${currentMonth + 1}-${currentYear}.csv`; // File name with month-year
     link.click();
   };
-
   const handleMonthChange = (newMonth, newYear) => {
     setCurrentMonth(newMonth);
     setCurrentYear(newYear);
@@ -75,29 +70,18 @@ const App = () => {
   useEffect(() => {
     setLoading(true);
     axios
-      .get(apiUrl)
+      .get("http://localhost:5000/events")
       .then((response) => {
-        console.log(response); // Check the structure of the response
-
-        if (
-          response.data &&
-          Array.isArray(response.data.events) &&
-          response.data.events.length > 0
-        ) {
-          const eventsWithDates = response.data.events.map((event, index) => ({
-            ...event,
-            date: new Date(event.date),
-            id: event.id || index, // Add fallback unique ID
-          }));
-          setEvents(eventsWithDates);
-        } else {
-          setError("No events found or API response structure is incorrect.");
-        }
+        const eventsWithDates = response.data.map((event, index) => ({
+          ...event,
+          date: new Date(event.date),
+          id: event.id || index, // Add fallback unique ID
+        }));
+        setEvents(eventsWithDates);
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Error loading events:", error);
-        setError("Error loading events.");
+        setError("Error loading events");
         setLoading(false);
       });
   }, []);
@@ -111,7 +95,7 @@ const App = () => {
     };
 
     axios
-      .post(apiUrl, eventWithDate)
+      .post("http://localhost:5000/events", eventWithDate)
       .then(() => {
         setEvents((prev) => [...prev, eventWithDate]);
       })

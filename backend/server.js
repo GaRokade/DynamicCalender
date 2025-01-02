@@ -4,27 +4,16 @@ const path = require("path");
 const cors = require("cors");
 
 const app = express();
-const port = process.env.PORT || 5000; // Use the environment-provided port or default to 5000
+const port = 5000;
 
-// Enable CORS for specific origin (frontend domain)
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "*", // Ensure this points to your frontend domain in production
-    methods: ["GET", "POST"], // Allow specific HTTP methods
-    allowedHeaders: ["Content-Type"], // Allow Content-Type header
-  })
-);
+// Enable CORS for all requests
+app.use(cors());
 
 // Middleware to parse incoming requests with JSON payloads
 app.use(express.json());
 
 // File path to store events
 const eventsFilePath = path.join(__dirname, "events.json");
-
-// Ensure events.json file exists
-if (!fs.existsSync(eventsFilePath)) {
-  fs.writeFileSync(eventsFilePath, JSON.stringify([])); // Create an empty events.json file if it doesn't exist
-}
 
 // Helper function to read events from the file
 const readEventsFromFile = () => {
@@ -67,9 +56,6 @@ app.post("/events", (req, res) => {
 
   res.status(201).json(newEvent); // Respond with the newly created event
 });
-
-// Serve static files (if needed for deployment)
-app.use(express.static(path.join(__dirname, "public")));
 
 // Start the server
 app.listen(port, () => {
