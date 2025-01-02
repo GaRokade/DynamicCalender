@@ -9,7 +9,9 @@ const port = process.env.PORT || 5000; // Use the environment-provided port or d
 // Enable CORS for specific origin (frontend domain)
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "*", // Replace '*' with your Vercel frontend domain for production
+    origin: process.env.FRONTEND_URL || "*", // Ensure this points to your frontend domain in production
+    methods: ["GET", "POST"], // Allow specific HTTP methods
+    allowedHeaders: ["Content-Type"], // Allow Content-Type header
   })
 );
 

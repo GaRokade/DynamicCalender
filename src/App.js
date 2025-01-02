@@ -9,7 +9,8 @@ import EventList from "./components/EventList";
 import PropTypes from "prop-types";
 import "./styles.css";
 
-const apiUrl = process.env.REACT_APP_API_URL;
+const apiUrl = process.env.REACT_APP_API_URL; // Ensure this is defined in your .env file
+
 const App = () => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -18,6 +19,7 @@ const App = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
   const exportToJSON = () => {
     const eventsForMonth = events.filter((event) => {
       const eventMonth = event.date.getMonth(); // Get month from event date
@@ -36,6 +38,7 @@ const App = () => {
     link.download = `events-${currentMonth + 1}-${currentYear}.json`; // Download file with month-year name
     link.click();
   };
+
   const exportToCSV = () => {
     const eventsForMonth = events.filter((event) => {
       const eventMonth = event.date.getMonth();
@@ -62,6 +65,7 @@ const App = () => {
     link.download = `events-${currentMonth + 1}-${currentYear}.csv`; // File name with month-year
     link.click();
   };
+
   const handleMonthChange = (newMonth, newYear) => {
     setCurrentMonth(newMonth);
     setCurrentYear(newYear);
@@ -82,10 +86,10 @@ const App = () => {
         setLoading(false);
       })
       .catch((error) => {
-        setError("Error loading events");
+        setError("Error loading events: " + error.message);
         setLoading(false);
       });
-  }, []);
+  }, [apiUrl]);
 
   // Add event
   const addEvent = (newEvent) => {
