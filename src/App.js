@@ -77,19 +77,25 @@ const App = () => {
     axios
       .get(apiUrl)
       .then((response) => {
-        const eventsWithDates = response.data.map((event, index) => ({
-          ...event,
-          date: new Date(event.date),
-          id: event.id || index, // Add fallback unique ID
-        }));
-        setEvents(eventsWithDates);
+        console.log(response); // Log the entire response object
+        if (Array.isArray(response.data)) {
+          const eventsWithDates = response.data.map((event, index) => ({
+            ...event,
+            date: new Date(event.date),
+            id: event.id || index, // Add fallback unique ID
+          }));
+          setEvents(eventsWithDates);
+        } else {
+          setError("API response is not an array.");
+        }
         setLoading(false);
       })
       .catch((error) => {
-        setError("Error loading events: " + error.message);
+        console.error("Error loading events:", error);
+        setError("Error loading events");
         setLoading(false);
       });
-  }, [apiUrl]);
+  }, []);
 
   // Add event
   const addEvent = (newEvent) => {
