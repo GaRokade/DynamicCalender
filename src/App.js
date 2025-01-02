@@ -77,16 +77,22 @@ const App = () => {
     axios
       .get(apiUrl)
       .then((response) => {
-        console.log(response); // Log the entire response object
-        if (Array.isArray(response.data)) {
-          const eventsWithDates = response.data.map((event, index) => ({
+        console.log(response); // Check the structure of the response
+        // Example: { status: "success", events: [...] }
+
+        if (
+          response.data &&
+          response.data.events &&
+          Array.isArray(response.data.events)
+        ) {
+          const eventsWithDates = response.data.events.map((event, index) => ({
             ...event,
             date: new Date(event.date),
             id: event.id || index, // Add fallback unique ID
           }));
           setEvents(eventsWithDates);
         } else {
-          setError("API response is not an array.");
+          setError("API response structure is incorrect or events not found.");
         }
         setLoading(false);
       })
