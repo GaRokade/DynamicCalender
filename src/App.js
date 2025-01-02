@@ -78,12 +78,11 @@ const App = () => {
       .get(apiUrl)
       .then((response) => {
         console.log(response); // Check the structure of the response
-        // Example: { status: "success", events: [...] }
 
         if (
           response.data &&
-          response.data.events &&
-          Array.isArray(response.data.events)
+          Array.isArray(response.data.events) &&
+          response.data.events.length > 0
         ) {
           const eventsWithDates = response.data.events.map((event, index) => ({
             ...event,
@@ -92,13 +91,13 @@ const App = () => {
           }));
           setEvents(eventsWithDates);
         } else {
-          setError("API response structure is incorrect or events not found.");
+          setError("No events found or API response structure is incorrect.");
         }
         setLoading(false);
       })
       .catch((error) => {
         console.error("Error loading events:", error);
-        setError("Error loading events");
+        setError("Error loading events.");
         setLoading(false);
       });
   }, []);
